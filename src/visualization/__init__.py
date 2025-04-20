@@ -1,0 +1,1 @@
+"""Visualization modules for the whisky recognition system."""
