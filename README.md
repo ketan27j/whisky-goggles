@@ -30,7 +30,7 @@ pip install -r requirements.txt
    - On Windows: Download installer from https://github.com/UB-Mannheim/tesseract/wiki
 
 4. Prepare the database:
-   - Place your whisky database CSV file at `data/whisky_database.csv`
+   - Place your whisky database CSV file at `data/501_Bottle_Dataset.csv`
    - The CSV should contain at minimum these columns: id, name, brand_id, abv, spirit_type, image_url
 
 ## Usage
