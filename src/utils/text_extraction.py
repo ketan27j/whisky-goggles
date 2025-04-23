@@ -52,6 +52,12 @@ def extract_metadata(text: str) -> Dict[str, Any]:
     age_match = re.search(age_pattern, text.lower())
     if age_match:
         metadata['age'] = int(age_match.group(1))
+
+    # Extract proof statement (100 proof)
+    proof_pattern = r'(\d{1,2})[\s]*(proof)'
+    proof_match = re.search(proof_pattern, text.lower())
+    if proof_match:
+        metadata['proof'] = int(proof_match.group(1))
     
     return metadata
 

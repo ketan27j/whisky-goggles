@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from typing import Tuple, Union, List
 
-def preprocess_image(image: np.ndarray, max_dimension: int = 800) -> np.ndarray:
+def preprocess_image(image: np.ndarray, max_dimension: int = 800, for_ocr: bool = False) -> np.ndarray:
     """
     Preprocess the image for better feature extraction.
     
@@ -27,15 +27,33 @@ def preprocess_image(image: np.ndarray, max_dimension: int = 800) -> np.ndarray:
         scale = max_dimension / max(height, width)
         new_height, new_width = int(height * scale), int(width * scale)
         gray = cv2.resize(gray, (new_width, new_height))
+
+    if for_ocr:
+        # OCR-specific preprocessing
+        # Apply binary thresholding with Otsu's method
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         
-    # Apply adaptive histogram equalization for better contrast
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    enhanced = clahe.apply(gray)
-    
-    # Apply Gaussian blur to reduce noise
-    blurred = cv2.GaussianBlur(enhanced, (5, 5), 0)
-    
-    return blurred
+        # Apply morphological operations to clean up the image
+        kernel = np.ones((1, 1), np.uint8)
+        opening = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
+        
+        # Dilate to make text thicker and more readable
+        dilated = cv2.dilate(opening, kernel, iterations=1)
+        
+        # Sharpen the image
+        sharpen_kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
+        sharpened = cv2.filter2D(dilated, -1, sharpen_kernel)
+        
+        return sharpened    
+    else:
+        # Apply adaptive histogram equalization for better contrast
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        enhanced = clahe.apply(gray)
+        
+        # Apply Gaussian blur to reduce noise
+        blurred = cv2.GaussianBlur(enhanced, (5, 5), 0)
+        
+        return blurred
 
 def detect_label(image: np.ndarray) -> np.ndarray:
     """

@@ -45,7 +45,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-UI will be available at http://localhost:8501 with following features:
+UI will be available at http://localhost:8501 with following features (It will take a while to load the data from dataset and build the model):
 
 1. Upload an image of a whisky bottle
 2. View the top 3 matches with confidence scores
@@ -111,6 +111,7 @@ whisky_recognition_system/
 ├── run.py                  # Main entry point
 ├── api.py                  # REST API implementation
 ├── demo.py                 # Demo application
+├── app.py                  # Streamlit UI application
 ├── tests/                  # Unit tests
 │   ├── __init__.py
 │   └── test_recognizer.py

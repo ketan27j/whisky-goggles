@@ -67,12 +67,15 @@ class WhiskyBottleRecognizer:
                 processed_image = preprocess_image(image)
                 keypoints, descriptors = extract_features(processed_image, self.orb)
                 
+                processed_image_ocr = preprocess_image(image,for_ocr=True)
+
                 if descriptors is not None:
                     self.image_descriptors[bottle_id] = descriptors
                     
                     # Extract text using OCR
-                    text_features = extract_text(processed_image)
-                    
+                    text_features = extract_text(processed_image_ocr)
+                    # print(f"Extracted text: {text_features} for bottle ID {bottle_id}")
+
                     # Store combined features
                     self.reference_features[bottle_id] = {
                         'descriptors': descriptors,
@@ -170,7 +173,7 @@ class WhiskyBottleRecognizer:
         label_image = detect_label(image)
         
         # Preprocess the image
-        processed_image = preprocess_image(label_image)
+        processed_image = preprocess_image(image)
         
         # Extract features
         keypoints, descriptors = extract_features(processed_image, self.orb)
