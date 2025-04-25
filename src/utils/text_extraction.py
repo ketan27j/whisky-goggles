@@ -1,10 +1,24 @@
 """Text extraction utilities for whisky bottle recognition."""
 
 import re
+import time
 import pytesseract
 from PIL import Image
 import numpy as np
 from typing import Dict, Any
+from google import genai
+from google.genai import types
+import requests
+
+def optimize_tesseract_config():
+    """
+    Returns optimized Tesseract configuration for code extraction
+    """
+    # Configuration options for Tesseract
+    config = (
+        '--psm 11 --oem 3'
+    )
+    return config
 
 def extract_text(image: np.ndarray) -> str:
     """
@@ -16,18 +30,56 @@ def extract_text(image: np.ndarray) -> str:
     Returns:
         Extracted text
     """
+    config = optimize_tesseract_config()
+
     # Convert OpenCV image to PIL image for Tesseract
     pil_image = Image.fromarray(image)
     
     # Extract text using Tesseract OCR
-    text = pytesseract.image_to_string(pil_image)
+    text = pytesseract.image_to_string(pil_image,config=config)
     
     # Clean and normalize text
     text = text.lower()
-    text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
+    text = re.sub(r'[^\w\s]', '', text)  # Remove punctuatio    n
     text = re.sub(r'\s+', ' ', text).strip()  # Normalize whitespace
     
     return text
+
+def extract_text_llm(image_path: str = None, image_url: str = None) -> str:
+    """
+    Extract text from image using LLM.
+
+    Args:
+        image: Input preprocessed image
+
+    Returns:
+        Extracted text
+    """
+    # TODO: Implement LLM-based text extraction
+    print(image_path)
+    response = ''
+    prompt = """
+        Analyze the provided image of a liquor bottle or box and extract all textual information present in the image correctly. Provide only text from image separated by space.
+        """
+    
+    time.sleep(10)
+    client = genai.Client(api_key="AIzaSyAEGmPdSJxF_U694D3h1QdqbTn15NZ9mHk")
+    if(image_path):
+        my_file = client.files.upload(file=image_path, config={'mime_type': 'image/jpeg'})        
+        response = client.models.generate_content(
+            model='gemini-2.0-flash',
+            contents=[my_file,prompt])
+    if(image_url):
+        image_bytes = requests.get(image_url).content
+        image = types.Part.from_bytes(
+            data=image_bytes, mime_type="image/jpeg"
+        )
+        response = client.models.generate_content(
+            model='gemini-2.0-flash',
+            contents=[prompt,image])
+
+    return response.text
+
 
 def extract_metadata(text: str) -> Dict[str, Any]:
     """

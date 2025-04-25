@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from typing import Tuple, Union, List
 
-def preprocess_image(image: np.ndarray, max_dimension: int = 800, for_ocr: bool = False) -> np.ndarray:
+def preprocess_image(image: np.ndarray, max_dimension: int = 1600, for_ocr: bool = False) -> np.ndarray:
     """
     Preprocess the image for better feature extraction.
     
@@ -16,10 +16,7 @@ def preprocess_image(image: np.ndarray, max_dimension: int = 800, for_ocr: bool 
         Preprocessed image
     """
     # Convert to grayscale
-    if len(image.shape) == 3:
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    else:
-        gray = image
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         
     # Resize to standard size while maintaining aspect ratio
     height, width = gray.shape
@@ -28,27 +25,69 @@ def preprocess_image(image: np.ndarray, max_dimension: int = 800, for_ocr: bool 
         new_height, new_width = int(height * scale), int(width * scale)
         gray = cv2.resize(gray, (new_width, new_height))
 
+    # Apply adaptive histogram equalization for better contrast
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    enhanced = clahe.apply(gray)    
     if for_ocr:
         # OCR-specific preprocessing
-        # Apply binary thresholding with Otsu's method
-        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # Apply thresholding to handle shadows and varying lighting
+        thresh = cv2.threshold(enhanced, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+        
+        # Adaptive thresholding with different block sizes
+        adaptive_thresh1 = cv2.adaptiveThreshold(enhanced, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                            cv2.THRESH_BINARY, 11, 2)
+        adaptive_thresh2 = cv2.adaptiveThreshold(enhanced, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                            cv2.THRESH_BINARY, 21, 3)
+        # Noise removal using bilateral filter (preserves edges better than gaussian)
+        denoised = cv2.bilateralFilter(enhanced, 9, 75, 75)
+                
+        # Sharpening to improve text definition
+        kernel = np.array([[-1,-1,-1], 
+                        [-1, 9,-1],
+                        [-1,-1,-1]])
+        sharpened = cv2.filter2D(denoised, -1, kernel)
+
+        denoised_nlm = cv2.fastNlMeansDenoising(sharpened, None, 10, 7, 21)
         
         # Apply morphological operations to clean up the image
         kernel = np.ones((1, 1), np.uint8)
-        opening = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
+        opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
         
         # Dilate to make text thicker and more readable
         dilated = cv2.dilate(opening, kernel, iterations=1)
         
         # Sharpen the image
         sharpen_kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
-        sharpened = cv2.filter2D(dilated, -1, sharpen_kernel)
+        sharpened_1 = cv2.filter2D(dilated, -1, sharpen_kernel)
+
+        # Binarization for gold text (metallic colors)
+        _, binary_gold = cv2.threshold(enhanced, 150, 255, cv2.THRESH_BINARY)
+
+        # Edge enhancement for decorative fonts
+        edges = cv2.Canny(gray, 100, 200)
+        kernel = np.ones((3, 3), np.uint8)
+        dilated_edges = cv2.dilate(edges, kernel, iterations=1)
+
+        # Inverted images (for white text on dark background)
+        inverted = cv2.bitwise_not(gray)
         
-        return sharpened    
+        result = {
+            "sharpened_1": sharpened_1,
+            "sharpened": sharpened,
+            "denoised_nlm": denoised_nlm,
+            "enhanced": enhanced,
+            "inverted": inverted,
+            "dilated_edges": dilated_edges,
+            "adaptive_thresh1": adaptive_thresh1,
+            "adaptive_thresh2": adaptive_thresh2,
+            "binary_gold": binary_gold,
+            "thresh": thresh,
+            "denoised": denoised,
+            "original": image
+        }
+        return result    
     else:
-        # Apply adaptive histogram equalization for better contrast
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-        enhanced = clahe.apply(gray)
+
         
         # Apply Gaussian blur to reduce noise
         blurred = cv2.GaussianBlur(enhanced, (5, 5), 0)

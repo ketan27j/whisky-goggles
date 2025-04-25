@@ -27,6 +27,24 @@ class WhiskyDatabase:
         """Load the whisky database from CSV file."""
         self.database = pd.read_csv(self.database_path)
         print(f"Loaded database with {len(self.database)} entries")
+        
+        # Add 'text_features' column if it doesn't exist
+        if 'text_features' not in self.database.columns:
+            self.database['text_features'] = ''
+            self.database.to_csv(self.database_path, index=False)
+            print("Added 'text_features' column and saved to CSV.")    
+
+    def save_text_feature(self, bottle_id: int, text_features: str):
+        """
+        Save text features for a bottle.
+
+        Args:
+            bottle_id: The ID of the bottle
+            text_features: Text features to save
+        """
+        self.database.loc[self.database['id'] == bottle_id, 'text_features'] = text_features
+        self.database.to_csv(self.database_path, index=False)
+        print(f"Saved text features for bottle {bottle_id}")
     
     def get_all_bottles(self):
         """Return all bottles in the database."""

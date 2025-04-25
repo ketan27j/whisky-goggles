@@ -8,7 +8,7 @@ from typing import Dict, List, Tuple, Union, Any
 
 from src.data.database import WhiskyDatabase
 from src.utils.image_processing import preprocess_image, detect_label, extract_features, load_image
-from src.utils.text_extraction import extract_text, extract_metadata, calculate_text_similarity
+from src.utils.text_extraction import extract_text, extract_metadata, calculate_text_similarity, extract_text_llm
 from config import (
     VISUAL_SIMILARITY_WEIGHT,
     TEXT_SIMILARITY_WEIGHT,
@@ -47,6 +47,7 @@ class WhiskyBottleRecognizer:
         for idx, row in self.database.get_all_bottles().iterrows():
             bottle_id = row['id']
             image_url = row['image_url']
+            text_features = str(row['text_features'])
             
             # Download image
             image_path = self.database.download_bottle_image(bottle_id, image_url)
@@ -67,15 +68,35 @@ class WhiskyBottleRecognizer:
                 processed_image = preprocess_image(image)
                 keypoints, descriptors = extract_features(processed_image, self.orb)
                 
-                processed_image_ocr = preprocess_image(image,for_ocr=True)
+                # processed_image_ocr = preprocess_image(image,for_ocr=True)
 
                 if descriptors is not None:
                     self.image_descriptors[bottle_id] = descriptors
-                    
+                    # text_features = ''
                     # Extract text using OCR
-                    text_features = extract_text(processed_image_ocr)
+                    # processed_images = extract_text(processed_image_ocr)
+                    # for name, img in processed_image_ocr.items():
+                    #     # tempText = extract_text(img)
+                    #     # if tempText not in text_features:
+                    #     #     text_features += ' ' + tempText
+                    #     if text_features.strip() == '':
+                    #         text_features = extract_text(img)
+                    #         # print(name+': '+text_features)
+                    max_length = 0
+                        
+                    # for name, img in processed_image_ocr.items():
+                    #     current_text = extract_text(img)
+                    #     if len(current_text) > max_length:
+                    #         max_length = len(current_text)
+                    #         text_features = current_text
                     # print(f"Extracted text: {text_features} for bottle ID {bottle_id}")
-
+                    print(f"text_features: {text_features.strip()}")
+                    if text_features.strip() == "nan" or text_features.strip() == "":       
+                        print(f"image url{image_url}")                 
+                        text_features = extract_text_llm(image_url=image_url)
+                        self.database.save_text_feature(bottle_id,text_features)
+                        print(f"Extracted text: {text_features} for bottle ID {bottle_id}")
+                    
                     # Store combined features
                     self.reference_features[bottle_id] = {
                         'descriptors': descriptors,
@@ -85,6 +106,7 @@ class WhiskyBottleRecognizer:
                         'abv': row['abv'],
                         'spirit_type': row['spirit_type']
                     }
+                    # print(self.reference_features[bottle_id])
             except Exception as e:
                 print(f"Error processing image for bottle ID {bottle_id}: {e}")
         
@@ -155,7 +177,7 @@ class WhiskyBottleRecognizer:
         
         return score / max(1, count) if count > 0 else 0.0
     
-    def identify_bottle(self, image_path: Union[str, np.ndarray], top_n: int = 5) -> List[Dict]:
+    def identify_bottle(self, image_path: Union[str, np.ndarray], top_n: int = 5, input_image = None) -> List[Dict]:
         """
         Identify the whisky bottle from an image.
         
@@ -179,11 +201,21 @@ class WhiskyBottleRecognizer:
         keypoints, descriptors = extract_features(processed_image, self.orb)
         
         # Extract text
-        text = extract_text(processed_image)
-        
+        text = ''
+        processed_image_ocr = preprocess_image(image,for_ocr=True)
+        max_length = 0
+            
+        # for name, img in processed_image_ocr.items():
+        #     current_text = extract_text(img)
+        #     if len(current_text) > max_length:
+        #         max_length = len(current_text)
+        #         text = current_text
+        #         print(text)        
+        text = extract_text_llm(image_path= input_image)
+        print(f"text: {text}")
         # Extract metadata from text
         extracted_metadata = extract_metadata(text)
-        
+        print(f"extracted_metadata: {extracted_metadata}")
         # Calculate similarity scores for all reference bottles
         scores = []
         for bottle_id, features in self.reference_features.items():
