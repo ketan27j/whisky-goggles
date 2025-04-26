@@ -23,9 +23,12 @@ def main():
     # Custom CSS to improve appearance and fix image sizes
     st.markdown("""
     <style>
-        .main .block-container {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
+        #MainMenu {visibility: hidden;}
+        header {visibility: hidden;}
+        footer {visibility: hidden;}
+        .block-container {
+            padding: 0 60px !important;
+            margin: 0 !important;
         }
         .stImage img {
             width: 300px !important;
@@ -43,20 +46,21 @@ def main():
             padding: 2px 5px;
             margin: 2px 0;
         }
-        .stButton button {
-            width: 100%;
-            background-color: red; /* Bootstrap primary color */
-            color: white; /* Text color */
-            border: none; /* Remove border */
-            border-radius: 5px; /* Rounded corners */
-            padding: 10px; /* Padding for better touch target */
-            font-size: 16px; /* Increase font size */
-            cursor: pointer; /* Pointer cursor on hover */
-            transition: background-color 0.3s; /* Smooth transition */
+        .stButton > button {
+            width: 100% !important;
+            background-color: black !important; 
+            color: white !important; 
+            border: 1px solid white !important;
+            border-radius: 5px !important;
+            padding: 10px !important;
+            font-size: 16px !important;
+            cursor: pointer !important;
+            transition: background-color 0.3s !important;
         }
-        .stButton button:hover {
-            background-color: #f5a99a; /* Darker shade on hover */
-            color: white;
+        .stButton > button:hover {
+            background-color: white !important;
+            color: black !important;
+            border: 1px solid black !important;
         }
         .stHeader {
             background-color: #1e1e1e;

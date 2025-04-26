@@ -9,41 +9,45 @@ from typing import Dict, Any
 from google import genai
 from google.genai import types
 import requests
+import os
+from dotenv import load_dotenv 
 
-def optimize_tesseract_config():
-    """
-    Returns optimized Tesseract configuration for code extraction
-    """
-    # Configuration options for Tesseract
-    config = (
-        '--psm 11 --oem 3'
-    )
-    return config
+load_dotenv()
 
-def extract_text(image: np.ndarray) -> str:
-    """
-    Extract text from image using OCR.
+# def optimize_tesseract_config():
+#     """
+#     Returns optimized Tesseract configuration for code extraction
+#     """
+#     # Configuration options for Tesseract
+#     config = (
+#         '--psm 11 --oem 3'
+#     )
+#     return config
+
+# def extract_text(image: np.ndarray) -> str:
+#     """
+#     Extract text from image using OCR.
     
-    Args:
-        image: Input preprocessed image
+#     Args:
+#         image: Input preprocessed image
         
-    Returns:
-        Extracted text
-    """
-    config = optimize_tesseract_config()
+#     Returns:
+#         Extracted text
+#     """
+#     config = optimize_tesseract_config()
 
-    # Convert OpenCV image to PIL image for Tesseract
-    pil_image = Image.fromarray(image)
+#     # Convert OpenCV image to PIL image for Tesseract
+#     pil_image = Image.fromarray(image)
     
-    # Extract text using Tesseract OCR
-    text = pytesseract.image_to_string(pil_image,config=config)
+#     # Extract text using Tesseract OCR
+#     text = pytesseract.image_to_string(pil_image,config=config)
     
-    # Clean and normalize text
-    text = text.lower()
-    text = re.sub(r'[^\w\s]', '', text)  # Remove punctuatio    n
-    text = re.sub(r'\s+', ' ', text).strip()  # Normalize whitespace
+#     # Clean and normalize text
+#     text = text.lower()
+#     text = re.sub(r'[^\w\s]', '', text)  # Remove punctuatio    n
+#     text = re.sub(r'\s+', ' ', text).strip()  # Normalize whitespace
     
-    return text
+#     return text
 
 def extract_text_llm(image_path: str = None, image_url: str = None) -> str:
     """
@@ -62,8 +66,7 @@ def extract_text_llm(image_path: str = None, image_url: str = None) -> str:
         Analyze the provided image of a liquor bottle or box and extract all textual information present in the image correctly. Provide only text from image separated by space.
         """
     
-    time.sleep(10)
-    client = genai.Client(api_key="AIzaSyAEGmPdSJxF_U694D3h1QdqbTn15NZ9mHk")
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
     if(image_path):
         my_file = client.files.upload(file=image_path, config={'mime_type': 'image/jpeg'})        
         response = client.models.generate_content(

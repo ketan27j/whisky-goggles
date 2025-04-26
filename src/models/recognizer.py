@@ -8,7 +8,8 @@ from typing import Dict, List, Tuple, Union, Any
 
 from src.data.database import WhiskyDatabase
 from src.utils.image_processing import preprocess_image, detect_label, extract_features, load_image
-from src.utils.text_extraction import extract_text, extract_metadata, calculate_text_similarity, extract_text_llm
+# from src.utils.text_extraction import extract_text
+from src.utils.text_extraction import extract_metadata, calculate_text_similarity, extract_text_llm
 from config import (
     VISUAL_SIMILARITY_WEIGHT,
     TEXT_SIMILARITY_WEIGHT,
