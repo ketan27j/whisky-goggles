@@ -2,7 +2,7 @@
 
 import re
 import time
-import pytesseract
+# import pytesseract
 from PIL import Image
 import numpy as np
 from typing import Dict, Any
