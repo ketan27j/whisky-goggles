@@ -37,8 +37,10 @@ class WhiskyRecognitionAPI:
             return jsonify({'error': 'No image provided'}), 400
             
         image_file = request.files['image']
-        image_bytes = image_file.read()
-        
+        file_path = 'uploads/' + image_file.filename
+        image_file.save(file_path)
+        # image_bytes = image_file.read()
+        image_bytes = open(file_path, 'rb').read()        
         # Convert to numpy array
         nparr = np.frombuffer(image_bytes, np.uint8)
         image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -48,7 +50,7 @@ class WhiskyRecognitionAPI:
         
         # Identify bottle
         try:
-            results = self.recognizer.identify_bottle(image, top_n=top_n)
+            results = self.recognizer.identify_bottle(image, top_n=top_n, input_image=file_path)
             return jsonify({
                 'matches': results
             })

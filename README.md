@@ -11,6 +11,9 @@ A computer vision system that identifies whisky bottles from images using featur
 - REST API for integration with other applications
 - Visualization tools for matches
 
+## Demo
+[![Video Description](https://github.com/ketan27j/whisky-goggles/blob/main/docs/play.jpg)](https://youtu.be/ZOAvTyMKtzI)
+
 ## Installation
 
 1. Clone the repository:
@@ -29,14 +32,10 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Install Tesseract OCR:
-   - On Ubuntu/Debian: `sudo apt-get install tesseract-ocr`
-   - On macOS: `brew install tesseract`
-   - On Windows: Download installer from https://github.com/UB-Mannheim/tesseract/wiki
+4. Rename .env.examplee to .env and update gemini api key.
 
 5. Prepare the database:
    - Place your whisky database CSV file at `data/501_Bottle_Dataset.csv`
-   - The CSV should contain at minimum these columns: id, name, brand_id, abv, spirit_type, image_url
 
 ## Usage
 
@@ -50,19 +49,6 @@ UI will be available at http://localhost:8501 with following features (It will t
 1. Upload an image of a whisky bottle
 2. View the top 3 matches with confidence scores
 3. View the identified bottle details
-
-### Run the Demo
-
-```
-python run.py demo --image path/to/bottle_image.jpg
-```
-
-The demo will:
-1. Load the test image
-2. Identify potential matches from the database
-3. Display and save top matches with confidence scores
-4. Generate visualization of matches
-5. Save results to JSON
 
 ### Run the API Server
 
