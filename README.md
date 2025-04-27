@@ -9,7 +9,7 @@ A computer vision system that identifies whisky bottles from images using featur
 - Detects ABV percentage and age statements
 - Provides confidence scores for matches
 - REST API for integration with other applications
-- Visualization tools for matches
+- Streamlit UI for demo
 
 ## Demo
 [![Video Description](https://github.com/ketan27j/whisky-goggles/blob/main/docs/play.jpg)](https://youtu.be/ZOAvTyMKtzI)
@@ -44,7 +44,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-UI will be available at http://localhost:8501 with following features (It will take a while to load the data from dataset and build the model):
+UI will be available at http://localhost:8501 with following features (It will take a while to load the data from dataset and build the model. This will automatically fetch images by reading bottle dataset and store it in data/whisky_images/ folder. Also fetch vision and text features using opencv and gemini llm respectively):
 
 1. Upload an image of a whisky bottle
 2. View the top 3 matches with confidence scores
@@ -55,7 +55,7 @@ UI will be available at http://localhost:8501 with following features (It will t
 ```
 python run.py api --port 5000
 ```
-This will automatically fetch images by reading bottle dataset and store it in data/whisky_images/ folder.
+t will take a while to load the data from dataset and build the model. This will automatically fetch images by reading bottle dataset and store it in data/whisky_images/ folder. Also fetch vision and text features using opencv and gemini llm respectively
 
 The API server provides:
 - `POST /identify` - Upload an image to identify a whisky bottle
@@ -79,7 +79,7 @@ for match in results['matches']:
 
 ## Core Logic
 
-The <b>identify_bottle</b> method uses a multi-faceted approach to recognize whisky bottles. First, it detects and isolates the label region from the input image. After preprocessing, it extracts visual features using ORB descriptors and text content via OCR. The system then calculates three similarity scores between the query image and reference database entries:
+The <b>identify_bottle</b> method uses a multi-faceted approach to recognize whisky bottles. First,some image preprocessing is applied and then extracts visual features using ORB descriptors and text content via OCR using gemini-2.0-flash vision llm. Text features extracted are saved in 'data/501_Bottle_Dataset.csv' for future use. The system then calculates three similarity scores between the query image and reference database entries:
 
 1. Visual similarity using feature matching
 2. Text similarity using fuzzy string matching
